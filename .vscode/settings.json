@@ -1,0 +1,18 @@
+{
+  "files.autoSave": "off",
+  "editor.formatOnSave": false,
+  "sourcepawn.compilerOptions": [
+    "-O2",
+    "-v2"
+  ],
+  "sourcepawn.formatterSettings": [
+    "BraceWrapping: { AfterClass: false", // - Set the first of custom wrap settings with {
+      "AfterCaseLabel: false",
+      // - Other settings which belongs here
+      "AfterControlStatement: Always }", // - Set the last of custom wrap settings with }
+  ],
+  "sourcepawn.outputDirectoryPath": "./compiled/",
+  "sourcepawn.optionalIncludeDirsPaths": [
+    "./include/"
+  ],
+}
