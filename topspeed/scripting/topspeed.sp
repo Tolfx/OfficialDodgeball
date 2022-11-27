@@ -38,6 +38,9 @@ public void OnPluginStart()
 	RegConsoleCmd("topspeed", CommandTopSpeed, "Shows the top speed of the server");
 	RegConsoleCmd("ts", CommandTopSpeed, "Shows the top speed of the server");
 
+	RegConsoleCmd("topcurrent", CommandTopCurrent, "Shows yours top speed on the server");
+	RegConsoleCmd("tc", CommandTopCurrent, "Shows yours top speed on the server");
+
 	/* Hook players deaths */
 	HookEvent("player_death", OnPlayerDeath, EventHookMode_Post);
 	RegAdminCmd("sm_updatetopspeeds", UpdateStats, ADMFLAG_ROOT, "Updates the top speed stats", _, FCVAR_PROTECTED);
@@ -219,7 +222,7 @@ public void hsql_TopSpeedPlayer(Handle owner, Handle query, const char[] error, 
 	char buffer[255];
 	Format(buffer, sizeof(buffer), "Name: %s", PlayerName);
 	DrawPanelItem(panel, buffer);
-	Format(buffer, sizeof(buffer), "Top speed: %i", iTopSpeed);
+	Format(buffer, sizeof(buffer), "Top speed: %i MpH", iTopSpeed);
 	DrawPanelItem(panel, buffer);
 	Format(buffer, sizeof(buffer), "Top deflects: %i", iTopDeflects);
 	DrawPanelItem(panel, buffer);
@@ -236,7 +239,14 @@ public int PanelHandlerNothing(Handle menu, MenuAction action, int param1, int p
 void UpdatePlayerToDB(int client) {
 	char Query[255];
 	Format(Query, sizeof(Query), "UPDATE topspeed SET topspeed = '%i', topdeflects = '%i' WHERE steamid = '%s' AND serverid = '%s'", Player[client].iTopSpeed, Player[client].iTopDeflects, GetSteamId(client), cServerId);
-	SQL_FastQuery(db, Query);
+	SQL_TQuery(db, SQL_ErrorCheckCallBack, Query);
+}
+
+public void SQL_ErrorCheckCallBack(Handle owner, Handle query, const char[] error, any data) {
+	// This is just an errorcallback for function who normally don't return any data
+	if (query == null) {
+		SetFailState("Query failed! %s", error);
+	}
 }
 
 void EdgeCaseAddPlayerToDatabase(int iClient)
@@ -349,6 +359,15 @@ public Action CommandTopSpeed(int iClient, int args)
 	return Plugin_Handled;
 }
 
+public Action CommandTopCurrent(int iClient, int args)
+{
+	// Get our self top speed from iClient
+	char Query[255];
+	Format(Query, sizeof(Query), "SELECT * FROM topspeed WHERE steamid = '%s' AND serverid = '%s'", GetSteamId(iClient), cServerId);
+	SQL_TQuery(db, hsql_TopSpeedPlayer, Query, GetClientUserId(iClient));
+	return Plugin_Handled;
+}
+
 public void ShowTopSpeed(int iClient)
 {
 	char Query[255];
@@ -397,6 +416,7 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 
 	if (IsEntityConnectedClient(attacker) && IsEntityConnectedClient(victim) && !IsFakeClient(attacker) && !IsFakeClient(victim) && victim != attacker)
 	{
+		// Lets check if new top speed and top deflects is higher than the old one
 		UpdatePlayerToDB(attacker);
 		UpdatePlayerToDB(victim);
 	}
