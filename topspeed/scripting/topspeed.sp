@@ -28,9 +28,9 @@ public Plugin myinfo =
 {
 	name = "topspeed",
 	author = "Tolfx",
-	description = "",
-	version = "1.0.0",
-	url = "https://github.com/Tolfx/topspeed"
+	description = "Topspeed plugin for Dodgeball",
+	version = "1.1.0",
+	url = "https://github.com/Tolfx/OfficialDodgeball"
 };
 
 public void OnPluginStart()
@@ -88,6 +88,10 @@ void GetConfigs(char[] path = "tfdb_topspeed.cfg")
 public void OnConfigsExecuted() {
 	GetConfigs();
 	LogMessage("[TFDB] Configs executed");
+	if (!cServerId) {
+		LogError("[TFDB] Server id is not set, please set it in the config");
+		return;
+	}
 	/* Start Database */
 	StartDatabase();
 }
@@ -111,8 +115,8 @@ void StartDatabase()
 
 	SQL_LockDatabase(db);
 	// Create a new table, with steamid, name, topspeed, topdeflects and serverid
-	// Ensure that steamid is unique
-	FormatEx(Query, sizeof(Query), "CREATE TABLE IF NOT EXISTS topspeed (steamid VARCHAR(32) NOT NULL, name VARCHAR(32) NOT NULL, topspeed INT NOT NULL, topdeflects INT NOT NULL, serverid VARCHAR(32) NOT NULL, PRIMARY KEY (steamid))");
+	// We want to ensure that we only have one entry per steamid and serverid
+	Format(Query, sizeof(Query), "CREATE TABLE IF NOT EXISTS topspeed (steamid VARCHAR(32) NOT NULL, name VARCHAR(32) NOT NULL, topspeed INT NOT NULL, topdeflects INT NOT NULL, serverid VARCHAR(32) NOT NULL, PRIMARY KEY (steamid, serverid))");
 	SQL_FastQuery(db, Query);
 	SQL_UnlockDatabase(db);
 
@@ -133,7 +137,6 @@ public void UpdateOrAddToDatabase(int iClient)
 	char Query[255];
 	char name[32];
 	GetClientName(iClient, name, sizeof(name));
-	LogMessage("Updating or adding to database client %s", name);
 	Format(Query, sizeof(Query), "SELECT * FROM topspeed WHERE steamid = '%s' AND serverid = '%s'", GetSteamId(iClient), cServerId);
 	SQL_TQuery(db, hsql_Player, Query, GetClientUserId(iClient));
 }
@@ -152,7 +155,6 @@ public void hsql_Player(Handle owner, Handle query, const char[] error, any data
 		if (SQL_GetAffectedRows(query) == 0)
 		{
 			LogMessage("No rows found, adding to database");
-			LogMessage("Rows: %i", SQL_GetRowCount(query));
 			// If there is no rows, we add the player to the database, edge case
 			Player[iClient].iTopSpeed = 0;
 			Player[iClient].iTopDeflects = 0;
@@ -242,12 +244,6 @@ void UpdatePlayerToDB(int client) {
 	SQL_TQuery(db, SQL_ErrorCheckCallBack, Query);
 }
 
-public void SQL_ErrorCheckCallBack(Handle owner, Handle query, const char[] error, any data) {
-	// This is just an errorcallback for function who normally don't return any data
-	if (query == null) {
-		SetFailState("Query failed! %s", error);
-	}
-}
 
 void EdgeCaseAddPlayerToDatabase(int iClient)
 {
@@ -255,8 +251,15 @@ void EdgeCaseAddPlayerToDatabase(int iClient)
 	char name[32];
 	GetClientName(iClient, name, sizeof(name));
 	LogMessage("Adding to database client %s", name);
-	Format(Query, sizeof(Query), "INSERT INTO topspeed (steamid, name, topspeed, topdeflects, serverid) VALUES ('%s', '%s', '%i', '%i', '%s')", GetSteamId(iClient), name, 0, 0, cServerId);
-	SQL_FastQuery(db, Query);
+	Format(Query, sizeof(Query), "INSERT INTO topspeed (steamid, name, topspeed, topdeflects, serverid) VALUES ('%s', '%s', '%i', '%i', '%s')", GetSteamId(iClient), name, Player[client].iTopSpeed, Player[client].iTopDeflects, cServerId);
+	SQL_TQuery(db, SQL_ErrorCheckCallBack, Query);
+}
+
+public void SQL_ErrorCheckCallBack(Handle owner, Handle query, const char[] error, any data) {
+	// This is just an errorcallback for function who normally don't return any data
+	if (query == null) {
+		SetFailState("Query failed! %s", error);
+	}
 }
 
 /**
@@ -284,8 +287,6 @@ public int hMenu_TopSpeed(Handle menu, MenuAction action, int param1, int param2
 		SQL_TQuery(db, hsql_TopSpeedPlayer, Query, GetClientUserId(param1));
 		return;
 	}
-
-
 }
 
 /**
