@@ -70,9 +70,9 @@ char blocked_commands[][] = { "rank", "skill", "points", "place", "session", "se
                                      "hlx_chat 0", "hlx_chat 1", "hlx_menu", "servers 1", "servers 2", 
                                      "servers 3", "hlx", "hlstatsx", "help" };
 
-Handle HLstatsXMenuMain;
-Handle HLstatsXMenuAuto;
-Handle HLstatsXMenuEvents;
+Menu HLstatsXMenuMain;
+public Handle HLstatsXMenuAuto;
+public Handle HLstatsXMenuEvents;
 
 Handle PlayerColorArray;
 ColorSlotArray[] = { -1, -1, -1, -1, -1, -1 };
@@ -153,7 +153,7 @@ public void OnPluginStart()
 
 	get_server_mod();
 
-	CreateHLstatsXMenuMain(HLstatsXMenuMain);
+	// CreateHLstatsXMenuMain(HLstatsXMenuMain);
 	CreateHLstatsXMenuAuto(HLstatsXMenuAuto);
 	CreateHLstatsXMenuEvents(HLstatsXMenuEvents);
 
@@ -265,7 +265,7 @@ public void HLXSettingsMenu(int client, CookieMenuAction action, any info, char[
 {
 	if (action == CookieMenuAction_SelectOption)
 	{
-		DisplayMenu(HLstatsXMenuMain, client, MENU_TIME_FOREVER);
+		CreateHLstatsXMenuMain(client);
 	}
 }
 
@@ -733,8 +733,20 @@ int color_player(int color_type, int player_index, char client_message[192])
 						Format(colored_player_name, sizeof(colored_player_name), "%c%s\x01 ", g_bTeamPlay?3:4, client_name);
 					case Game_ZPS:
 						Format(colored_player_name, sizeof(colored_player_name), "\x05%s\x01 ", client_name);
-					default:
-						Format(colored_player_name, sizeof(colored_player_name), "\x03%s\x01 ", client_name);
+					default: {
+						// Check team
+						int team_index = GetClientTeam(player_index);
+						LogMessage("Team index: %d", team_index);
+						// If on team 2 is red
+						if (team_index == 2)
+						{
+							Format(colored_player_name, sizeof(colored_player_name), "{#FF3D3D}%s\x01 ", client_name);
+						}
+						else
+						{
+							Format(colored_player_name, sizeof(colored_player_name), "{#9ACDFF}%s\x01 ", client_name);
+						}
+					}
 				}
 				if (ReplaceString(client_message, sizeof(client_message), search_client_name, colored_player_name) > 0)
 				{
@@ -752,8 +764,19 @@ int color_player(int color_type, int player_index, char client_message[192])
 						Format(colored_player_name, sizeof(colored_player_name), " \x05%s\x01 ", client_name);
 					case Game_GES:
 						Format(colored_player_name, sizeof(colored_player_name), " \x05%s\x01 ", client_name);
-					default:
-						Format(colored_player_name, sizeof(colored_player_name), " \x04%s\x01 ", client_name);
+					default: {
+						// Check team
+						int team_index = GetClientTeam(player_index);
+						// If on team 2 is red
+						if (team_index == 2)
+						{
+							Format(colored_player_name, sizeof(colored_player_name), " {#FF3D3D}%s\x01 ", client_name);
+						}
+						else
+						{
+							Format(colored_player_name, sizeof(colored_player_name), " {#9ACDFF}%s\x01 ", client_name);
+						}
+					}
 				}
 				ReplaceString(client_message, sizeof(client_message), search_client_name, colored_player_name);
 			}
@@ -892,14 +915,14 @@ int color_team_entities(char message[192])
 			{
 				if (ColorSlotArray[2] > -1)
 				{
-					if (ReplaceString(message, sizeof(message), "Red ", "\x03Red\x01 ") > 0)
+					if (ReplaceString(message, sizeof(message), "Red ", "{#FF3D3D}Red\x01 ") > 0)
 					{
 						return ColorSlotArray[2];
 					}
 				}
 				if (ColorSlotArray[3] > -1)
 				{
-					if (ReplaceString(message, sizeof(message), "Blue ", "\x03Blue\x01 ") > 0)
+					if (ReplaceString(message, sizeof(message), "Blue ", "{#9ACDFF}Blue\x01 ") > 0)
 					{
 						return ColorSlotArray[3];
 					}
@@ -1171,75 +1194,7 @@ public Action hlx_sm_psay(int args)
 				Format(display_message, sizeof(display_message), "\x01\x0B%c%s\x01 %s", ((gamemod == Game_ZPS || gamemod == Game_GES)?5:4), message_prefix, client_message);
 			}
 			
-			bool setupColorForRecipients = false;
-			if (color_index == -1)
-			{
-				setupColorForRecipients = true;
-			}
-			
-			if (g_bTrackColors4Chat && is_colored != 2)
-			{
-				while (IsStackEmpty(message_recipients) == false)
-				{
-					int recipient_client = -1;
-					PopStackCell(message_recipients, recipient_client);
-
-					int player_index = GetClientOfUserId(recipient_client);
-					if (player_index > 0 && !IsFakeClient(player_index) && IsClientInGame(player_index))
-					{
-						if (setupColorForRecipients == true)
-						{
-							color_index = player_index;
-						}
-
-						LogMessage("Sending message to %N: %s", player_index, display_message);
-						// CSendMessage(player_index, display_message, 0);
-						// Handle hBf;
-						// hBf = StartMessageOne("SayText2", player_index, USERMSG_RELIABLE|USERMSG_BLOCKHOOKS);
-						
-						char buffer[MAX_MESSAGE_LENGTH];
-						strcopy(buffer, sizeof(buffer), display_message);
-
-						CAddPrefix(buffer, sizeof(buffer));
-						CAddWhiteSpace(buffer, sizeof(buffer));
-
-						CSendMessage(player_index, buffer, 0);
-
-						// if (hBf != INVALID_HANDLE)
-						// {
-						// 	if(GetUserMessageType() == UM_Protobuf) 
-						// 	{
-						// 		Protobuf pb = UserMessageToProtobuf(hBf);
-						// 		pb.SetInt("ent_idx", 0);
-						// 		pb.SetBool("chat", true);
-						// 		pb.SetString("msg_name", buffer);
-						// 		pb.AddString("params", "");
-						// 		pb.AddString("params", "");
-						// 		pb.AddString("params", "");
-						// 		pb.AddString("params", "");
-						// 	}
-						// 	else
-						// 	{
-						// 		BfWrite bf = UserMessageToBfWrite(hBf);
-						// 		bf.WriteByte(color_index); // Message author
-						// 		bf.WriteByte(0); // Message author
-						// 		bf.WriteByte(true); // Chat message
-						// 		bf.WriteString(buffer); // Message text
-						// 		// BfWriteByte(hBf, color_index); 
-						// 		// BfWriteByte(hBf, 0);
-						// 		// BfWriteByte(hBf, 0);
-								
-						// 		// BfWriteString(hBf, buffer);
-						// 	}
-						// 	EndMessage();
-						// }
-					}
-				}
-			}
-			else
-			{
-				PrintToChatRecipients(display_message);
-			}
+			PrintToChatRecipients(display_message);
 		}
 		case Game_FF:
 		{
@@ -1880,7 +1835,8 @@ public Action hlx_block_commands(int client, const char[] command, int args)
 							(strcmp("hlx", user_command[start_index]) == 0) ||
 							(strcmp("hlstatsx", user_command[start_index]) == 0))
 						{
-							DisplayMenu(HLstatsXMenuMain, client, MENU_TIME_FOREVER);
+							LogMessage("Client %N (%i) tried to use %s command", client, client, user_command[start_index]);
+							CreateHLstatsXMenuMain(client);
 						}
 
 						if (gamemod == Game_INSMOD)
@@ -1902,7 +1858,7 @@ public Action hlx_block_commands(int client, const char[] command, int args)
 					|| strcmp("hlx", user_command[start_index]) == 0
 					|| strcmp("hlstatsx", user_command[start_index]) == 0))
 				{
-					DisplayMenu(HLstatsXMenuMain, client, MENU_TIME_FOREVER);
+					CreateHLstatsXMenuMain(client);
 				}
 				
 				return Plugin_Continue;
@@ -1986,9 +1942,9 @@ int swap_player(int player_index)
 }
 
 
-public void CreateHLstatsXMenuMain(Handle MenuHandle)
+public void CreateHLstatsXMenuMain(int iClient)
 {
-	MenuHandle = CreateMenu(HLstatsXMainCommandHandler, MenuAction_Select|MenuAction_Cancel);
+	Menu MenuHandle = CreateMenu(HLstatsXMainCommandHandler, MenuAction_Select|MenuAction_Cancel);
 
 	if (!g_bGameCanDoMotd)
 	{
@@ -2021,6 +1977,7 @@ public void CreateHLstatsXMenuMain(Handle MenuHandle)
 	}
 
 	SetMenuPagination(MenuHandle, 8);
+	DisplayMenu(MenuHandle, iClient, MENU_TIME_FOREVER);
 }
 
 
