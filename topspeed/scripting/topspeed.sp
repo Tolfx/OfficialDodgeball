@@ -2,7 +2,7 @@
 #include <sdkhooks>
 #include <sdktools>
 #include <sourcemod>
-// #include <morecolors>
+#include <multicolors>
 #include <tfdb>
 #pragma newdecls required
 
@@ -11,6 +11,7 @@ Handle db = null;
 enum struct TopSpeedPlayer {
 		int iTopSpeed;
 		int iTopDeflects;
+		int iPosition;
 }
 
 TopSpeedPlayer Player[MAXPLAYERS + 1];
@@ -29,12 +30,14 @@ public Plugin myinfo =
 	name = "topspeed",
 	author = "Tolfx",
 	description = "Topspeed plugin for Dodgeball",
-	version = "1.1.0",
+	version = "1.1.1",
 	url = "https://github.com/Tolfx/OfficialDodgeball"
 };
 
 public void OnPluginStart()
 {
+	LoadTranslations("topspeed.phrases.txt");
+
 	RegConsoleCmd("topspeed", CommandTopSpeed, "Shows the top speed of the server");
 	RegConsoleCmd("ts", CommandTopSpeed, "Shows the top speed of the server");
 
@@ -166,7 +169,6 @@ public void hsql_Player(Handle owner, Handle query, const char[] error, any data
 			UpdatePlayerToDB(iClient);
 		}
 	}
-
 }
 
 public void hsql_TopSpeed(Handle owner, Handle query, const char[] error, any data)
@@ -206,9 +208,8 @@ public void hsql_TopSpeedPlayer(Handle owner, Handle query, const char[] error, 
 			return;
 	}
 
-
 	Panel panel = CreatePanel();
-	char PlayerName[40], PlayerID[40];
+	char PlayerName[MAX_NAME_LENGTH], PlayerID[40];
 	int iTopSpeed = 0;
 	int iTopDeflects = 0;
 
@@ -222,14 +223,18 @@ public void hsql_TopSpeedPlayer(Handle owner, Handle query, const char[] error, 
 
 	SetPanelTitle(panel, "Speed stats");
 	char buffer[255];
-	Format(buffer, sizeof(buffer), "Name: %s", PlayerName);
+	Format(buffer, sizeof(buffer), "► Name: %s", PlayerName);
 	DrawPanelItem(panel, buffer);
-	Format(buffer, sizeof(buffer), "Top speed: %i MpH", iTopSpeed);
+	Format(buffer, sizeof(buffer), "► Top speed: %i MpH", iTopSpeed);
 	DrawPanelItem(panel, buffer);
-	Format(buffer, sizeof(buffer), "Top deflects: %i", iTopDeflects);
+	Format(buffer, sizeof(buffer), "► Top deflects: %i", iTopDeflects);
 	DrawPanelItem(panel, buffer);
 	DrawPanelItem(panel, "Close");
 	SendPanelToClient(panel, iClient, PanelHandlerNothing, 15);
+
+	// Get the steamid of the player
+	CPrintToChatAll("%t", "Top_Current", PlayerName, iTopDeflects, iTopSpeed);
+
 	CloseHandle(panel);
 }
 
@@ -240,6 +245,8 @@ public int PanelHandlerNothing(Handle menu, MenuAction action, int param1, int p
 
 void UpdatePlayerToDB(int client) {
 	char Query[255];
+	char name[32];
+	GetClientName(client, name, sizeof(name));
 	Format(Query, sizeof(Query), "UPDATE topspeed SET topspeed = '%i', topdeflects = '%i' WHERE steamid = '%s' AND serverid = '%s'", Player[client].iTopSpeed, Player[client].iTopDeflects, GetSteamId(client), cServerId);
 	SQL_TQuery(db, SQL_ErrorCheckCallBack, Query);
 }
@@ -251,7 +258,7 @@ void EdgeCaseAddPlayerToDatabase(int iClient)
 	char name[32];
 	GetClientName(iClient, name, sizeof(name));
 	LogMessage("Adding to database client %s", name);
-	Format(Query, sizeof(Query), "INSERT INTO topspeed (steamid, name, topspeed, topdeflects, serverid) VALUES ('%s', '%s', '%i', '%i', '%s')", GetSteamId(iClient), name, Player[client].iTopSpeed, Player[client].iTopDeflects, cServerId);
+	Format(Query, sizeof(Query), "INSERT INTO topspeed (steamid, name, topspeed, topdeflects, serverid) VALUES ('%s', '%s', '%i', '%i', '%s')", GetSteamId(iClient), name, Player[iClient].iTopSpeed, Player[iClient].iTopDeflects, cServerId);
 	SQL_TQuery(db, SQL_ErrorCheckCallBack, Query);
 }
 
@@ -429,6 +436,11 @@ public void OnClientPutInServer(int iClient) {
 	UpdateOrAddToDatabase(iClient);
 }
 
+
 /**
  * END: Hooks
+ */
+
+/**
+ * Tiemr
  */
