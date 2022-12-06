@@ -52,9 +52,11 @@ void DisplayHelpMenu(int iClient)
 	Menu hMenu = new Menu(DodgeballMenuHandler);
 	
 	hMenu.SetTitle("Help");
-	hMenu.AddItem("0", "Stats", ITEMDRAW_DEFAULT);
-	hMenu.AddItem("1", "I'm Stuck!", ITEMDRAW_DEFAULT);
+	hMenu.AddItem("0", "Rank", ITEMDRAW_DEFAULT);
+	hMenu.AddItem("1", "I'm stuck in spectate!", ITEMDRAW_DEFAULT);
 	hMenu.AddItem("2", "Rules", ITEMDRAW_DEFAULT);
+	hMenu.AddItem("3", "Top Speed", ITEMDRAW_DEFAULT);
+	hMenu.AddItem("4", "Top Players", ITEMDRAW_DEFAULT);
 	
 	hMenu.Display(iClient, MENU_TIME_FOREVER);
 }
@@ -106,8 +108,17 @@ public int DodgeballMenuHandler(Menu hMenu, MenuAction iMenuActions, int iParam1
 				case 2:
 				{
 					int userid = GetClientUserId(iParam1);
-					LogMessage("Running command sm_motd %d", userid);
 					ServerCommand("sm_motd #%d", userid);
+				}
+
+				case 3:
+				{
+					make_player_command(iParam1, "/ts");
+				}
+
+				case 4:
+				{
+					make_player_command(iParam1, "/top10");
 				}
 			}
 		}
