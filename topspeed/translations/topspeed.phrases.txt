@@ -1,0 +1,8 @@
+"Phrases"
+{
+  "Top_Current"
+  {
+    "#format"   "{1:s},{2:i},{3:i}"
+    "en"      "[ODB] {1} has {2} deflections and {3} MpH."
+  }
+}
