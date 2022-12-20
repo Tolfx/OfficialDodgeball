@@ -3,6 +3,8 @@
 #include <sourcemod>
 #include <loghelper>
 #include <tf2>
+#include <multicolors>
+
 #pragma newdecls required
 #pragma semicolon 1
 
@@ -15,16 +17,39 @@ public Plugin myinfo =
 	url = "https://github.com/Tolfx/help"
 };
 
+char DISCORD_URL[255] = "https://discord.gg/dodgeball";
+char DONATION_URL[255] = "https://donations.dodgeball.tf";
+
 public void OnPluginStart()
 {
 	LogMessage("help plugin loaded!");
 	RegConsoleCmd("sm_help", OnCommandHelp, "Show help menu");
+	RegConsoleCmd("sm_helpmenu", OnCommandHelp, "Show help menu");
+	RegConsoleCmd("sm_discord", OnCommandDiscord, "Show help menu");
+	RegConsoleCmd("sm_donate", OnCommandDonate, "Show help menu");
+}
+
+public Action OnCommandDiscord(int iClient, int args)
+{
+	ShowMOTDPanel(iClient, "Discord", DISCORD_URL, MOTDPANEL_TYPE_URL);
+	return Plugin_Handled;
 }
 
 public Action OnCommandHelp(int iClient, int args)
 {
 	DisplayHelpMenu(iClient);
 	return Plugin_Handled;
+}
+
+public Action OnCommandDonate(int iClient, int args)
+{
+	SayDonateText(iClient);
+	return Plugin_Handled;
+}
+
+public void SayDonateText(int client)
+{
+	CPrintToChat(client, "[{#95F3E3}O{#08C4CD}D{#27939D}B{default}] You can donate by going to: %s", DONATION_URL);
 }
 
 public Action OnClientSayCommand(int iClient, const char[] command, const char[] args)
@@ -57,6 +82,8 @@ void DisplayHelpMenu(int iClient)
 	hMenu.AddItem("2", "Rules", ITEMDRAW_DEFAULT);
 	hMenu.AddItem("3", "Top Speed", ITEMDRAW_DEFAULT);
 	hMenu.AddItem("4", "Top Players", ITEMDRAW_DEFAULT);
+	hMenu.AddItem("5", "Discord", ITEMDRAW_DEFAULT);
+	hMenu.AddItem("6", "Donate", ITEMDRAW_DEFAULT);
 	
 	hMenu.Display(iClient, MENU_TIME_FOREVER);
 }
@@ -119,6 +146,18 @@ public int DodgeballMenuHandler(Menu hMenu, MenuAction iMenuActions, int iParam1
 				case 4:
 				{
 					make_player_command(iParam1, "/top10");
+				}
+
+				case 5:
+				{
+					make_player_command(iParam1, "/discord");
+					// Send private message to the player
+					ReplyToCommand(iParam1, "Discord: %s", DISCORD_URL);
+				}
+
+				case 6:
+				{
+					SayDonateText(iParam1);
 				}
 			}
 		}
