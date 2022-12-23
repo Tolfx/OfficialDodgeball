@@ -1,0 +1,53 @@
+"Phrases"
+{
+  "Kiss_Say"
+  {
+    "#format"   "{1:s},{2:s}"
+    "en"      "[ODB] {#FF1493}{1} kissed {2}"
+  }
+
+  "Kiss_Yourself"
+  {
+    "en"      "[ODB] {#FF1493}You can't kiss yourself silly."
+  }
+
+  "Kiss_Bot"
+  {
+    "en"      "[ODB] {#FF1493}You can't kiss a bot.."
+  }
+
+  "Hug_Say"
+  {
+    "#format"   "{1:s},{2:s}"
+    "en"      "[ODB] {#FF1493}{1} hugged {2}!"
+  }
+
+  "Hug_Yourself"
+  {
+    "en"      "[ODB] {#FF1493}You can't hug yourself silly."
+  }
+
+  "Hug_Bot"
+  {
+    "en"      "[ODB] {#FF1493}You can't hug a bot.."
+  }
+
+  "Kiss_Cooldown"
+  {
+    "#format"   "{1:i}"
+    "en"      "[ODB] {#FF1493}You can't kiss anyone in {1} seconds!"
+  }
+
+  "Hug_Cooldown"
+  {
+    "#format"   "{1:i}"
+    "en"      "[ODB] {#FF1493}You can't hug anyone in {1} seconds!"
+  }
+
+  "Not_Found"
+  {
+    "#format"   "{1:s}"
+    "en"      "[ODB] {#FF1493}{1} not found!"
+  }
+
+}
