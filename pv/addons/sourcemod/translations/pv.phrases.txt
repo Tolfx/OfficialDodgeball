@@ -1,0 +1,12 @@
+"Phrases"
+{
+  "PyroVision_Enabled"
+  {
+    "en"      "[ODB] Succesfully enabled Pyrovision."
+  }
+
+  "PyroVision_Disabled"
+  {
+    "en"      "[ODB] Succesfully disabled Pyrovision."
+  }
+}
