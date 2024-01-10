@@ -74,7 +74,7 @@ public OnPluginStart() {
 	preLoadedForward = CreateGlobalForward("CCC_OnUserConfigPreLoaded", ET_Event, Param_Cell);
 	loadedForward = CreateGlobalForward("CCC_OnUserConfigLoaded", ET_Ignore, Param_Cell);
 	configReloadedForward = CreateGlobalForward("CCC_OnConfigReloaded", ET_Ignore);
-	setTagForward = CreateGlobalForward("CCC_OnSetTag", ET_Event, Param_Cell);
+	setTagForward = CreateGlobalForward("CCC_OnSetTag", ET_Event, Param_Cell, Param_String);
 	LoadConfig();
 }
 
@@ -464,6 +464,7 @@ public Native_SetTag(Handle:plugin, numParams) {
 
 	Call_StartForward(tagForward);
 	Call_PushCell(client);
+	Call_PushString(tag[client]);
 	Call_Finish();
 }
 
