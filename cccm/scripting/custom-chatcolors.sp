@@ -21,6 +21,7 @@ new Handle:messageForward;
 new Handle:preLoadedForward;
 new Handle:loadedForward;
 new Handle:configReloadedForward;
+new Handle:setTagForward;
 
 new String:tag[MAXPLAYERS + 1][32];
 new String:tagColor[MAXPLAYERS + 1][12];
@@ -73,6 +74,7 @@ public OnPluginStart() {
 	preLoadedForward = CreateGlobalForward("CCC_OnUserConfigPreLoaded", ET_Event, Param_Cell);
 	loadedForward = CreateGlobalForward("CCC_OnUserConfigLoaded", ET_Ignore, Param_Cell);
 	configReloadedForward = CreateGlobalForward("CCC_OnConfigReloaded", ET_Ignore);
+	setTagForward = setTagForward("CCC_OnSetTag", ET_Event, Param_Cell);
 	LoadConfig();
 }
 
@@ -459,6 +461,10 @@ public Native_SetTag(Handle:plugin, numParams) {
 		return;
 	}
 	GetNativeString(2, tag[client], sizeof(tag[]));
+
+	Call_StartForward(tagForward);
+	Call_PushCell(client);
+	Call_Finish();
 }
 
 public Native_ResetColor(Handle:plugin, numParams) {
