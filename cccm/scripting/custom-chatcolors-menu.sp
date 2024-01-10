@@ -214,6 +214,12 @@ public Action:CCC_OnColor(iClient, const String:strMessage[], CCC_ColorType:iTyp
 	return Plugin_Continue;
 }
 
+public Action:CCC_OnSetTag(iClient, const String:tag[])
+{
+	strcopy(g_strColor[iClient][TAG], sizeof(g_strColor[][]), tag);
+	return Plugin_Continue;
+}
+
 // ====[ COMMANDS ]============================================================
 public Action:Command_Color(iClient, iArgs)
 {
