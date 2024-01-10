@@ -74,7 +74,7 @@ public OnPluginStart() {
 	preLoadedForward = CreateGlobalForward("CCC_OnUserConfigPreLoaded", ET_Event, Param_Cell);
 	loadedForward = CreateGlobalForward("CCC_OnUserConfigLoaded", ET_Ignore, Param_Cell);
 	configReloadedForward = CreateGlobalForward("CCC_OnConfigReloaded", ET_Ignore);
-	setTagForward = setTagForward("CCC_OnSetTag", ET_Event, Param_Cell);
+	setTagForward = CreateGlobalForward("CCC_OnSetTag", ET_Event, Param_Cell);
 	LoadConfig();
 }
 
